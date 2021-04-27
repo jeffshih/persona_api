@@ -1,5 +1,4 @@
-import sys 
-sys.path.append("./")
+from config import *
 import os
 import json
 from zipfile import ZipFile
@@ -109,8 +108,8 @@ class dataLoader(object):
     
     def load(self):
         file_list = []
-        for item in os.listdir("./"):
-            filename = osp.join("./",item)
+        for item in os.listdir(self.path):
+            filename = osp.join(self.path,item)
             if osp.isfile(filename):
                 if filename.endswith(".zip"):
                     self.l = zipDecompressor(self.l)
@@ -118,8 +117,8 @@ class dataLoader(object):
                 elif filename.endswith("gz"):
                     self.l = tarDecompressor(self.l)
                     file_list.append(filename)
-            if len(file_list) == 0:
-                raise FileNotFoundError
+        if len(file_list) == 0:
+            raise FileNotFoundError
         try:
             for filename in file_list:
                 decompress_list = self.l.decompress(filename)
@@ -131,7 +130,7 @@ class dataLoader(object):
                     try:
                         self.data += self.l.load(decompress_file)
                     except ValueError:
-                        print("flat file error")
+                        print("loader decorate error")
         except FileNotFoundError:
             print("Decompress target does not exist")
 

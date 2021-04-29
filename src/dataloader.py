@@ -1,7 +1,10 @@
-from config import *
+from posix import listdir
+import sys
+sys.path.append("./")
+from src.config import *
 import os
 import json
-from zipfile import ZipFile
+from zipfile import BadZipFile, ZipFile
 from src.util import *
 from fnmatch import fnmatch
 import datetime as dt
@@ -18,30 +21,19 @@ class loader():
     
     """
 
-    def decompress(self):
+
+    def decompress(self,filename):
         pass 
 
-    def load(self):
+    def load(self,filename):
         pass
 
-
-class compressDecorator(loader):
-
-    __loader: loader = None 
-    
-    def __init__(self, loader:loader):
-        self.__loader = loader
-
-    @property
-    def loader(self):
-        return self.__loader
-    
-    def decompress(self):
-        return self.__loader.decompress()
 
 class loadDecorator(loader):
     
     __loader: loader = None 
+    SOURCE = compress_file_path
+    TARGET = decompressed_file_path
     
     def __init__(self, loader:loader):
         self.__loader = loader
@@ -49,34 +41,51 @@ class loadDecorator(loader):
     @property
     def loader(self):
         return self.__loader
-    
-    def load(self):
-        return self.__loader.load()
-    
 
-class zipDecompressor(compressDecorator):
 
-    def decompress(self, path):
+    def load(self,filename):
+        return self.__loader.load(filename)
+
+    def decompress(self,filename):
+        return self.__loader.decompress(filename) 
+
+class zipDecompressor(loadDecorator):
+
+    def decompress(self, filename):
         """
-        decompress the zip file and return the stuff that create from the decompress process
+        decompress the zip file and return the filename that create after the decompress process
         """
         current_time = dt.datetime.now()
         #incase the whole decompress take more than 5 min
         prev = current_time-dt.timedelta(minutes=5)
         res = []
-        with ZipFile(path, 'r') as f:
-            f.extractall("./")
-        for item in os.listdir("./"):
-            files = osp.join("./",item)
+        try:
+            with ZipFile(filename, 'r') as f:
+                f.extractall(self.TARGET)
+        except BadZipFile as e:
+            print("{}".format(e))
+            return res
+        for item in os.listdir(self.TARGET):
+            files = osp.join(self.TARGET,item)
             if osp.isfile(files):
                 st = os.stat(files)
                 mtime = dt.datetime.fromtimestamp(st.st_mtime)
                 if mtime > prev:
                     res.append(files)
+        #print("using zip decompressor")
         return res
 
-class tarDecompressor(compressDecorator):
+class tarDecompressor(loadDecorator):
     pass
+
+class restartDecompressor(loadDecorator):
+    def decompress(self, filename):
+        res = [osp.join(self.TARGET, item) for item in os.listdir(self.TARGET)]
+        if res:
+            #print("using restart decompressor")
+            return res
+        else:
+            return super().decompress(filename)
 
 class jsonLoader(loadDecorator):
     
@@ -84,12 +93,14 @@ class jsonLoader(loadDecorator):
     Read in default zip file, unzip and load the json file into memory
     """
     def load(self, fname):
+        #print("using jsonLoader")
         try:
             with open(fname, 'rb') as f:
                 target = json.load(f)
             return target
-        except FileNotFoundError as e:
-            return e
+        except ValueError as e:
+            print("Decoding Json failed")
+            return {}
 
 class csvLoader(loadDecorator):
     """
@@ -101,60 +112,67 @@ class csvLoader(loadDecorator):
 
 class dataLoader(object):
     
-    def __init__(self, path):
-        self.l = loader()
+    def __init__(self, source = compress_file_path, target = decompressed_file_path):
+        self.loader = loader()
         self.data = []
-        self.path = path
-    
-    def load(self):
+        if not osp.isdir(source) or not osp.isdir(target):
+            raise PermissionError
+        self.__source = source
+        self.__target = target
+        self.__load()
+
+    def __load(self):
         file_list = []
-        for item in os.listdir(self.path):
-            filename = osp.join(self.path,item)
+        for item in os.listdir(self.__source):
+            filename = osp.join(self.__source,item)
             if osp.isfile(filename):
                 if filename.endswith(".zip"):
-                    self.l = zipDecompressor(self.l)
+                    self.loader = zipDecompressor(self.loader)
                     file_list.append(filename)
                 elif filename.endswith("gz"):
-                    self.l = tarDecompressor(self.l)
+                    self.loader = tarDecompressor(self.loader)
                     file_list.append(filename)
         if len(file_list) == 0:
             raise FileNotFoundError
+        if len(os.listdir(self.__target)) != 0:
+            self.loader = restartDecompressor(self.loader)
         try:
             for filename in file_list:
-                decompress_list = self.l.decompress(filename)
+                decompress_list = self.loader.decompress(filename)
                 for decompress_file in decompress_list:
                     if decompress_file.endswith("json"):
-                        self.l = jsonLoader(self.l)
+                        self.loader = jsonLoader(self.loader)
                     elif decompress_file.endswith("csv"):
-                        self.l = csvLoader(self.l)
+                        self.loader = csvLoader(self.loader)
                     try:
-                        self.data += self.l.load(decompress_file)
+                        self.data += self.loader.load(decompress_file)
                     except ValueError:
                         print("loader decorate error")
         except FileNotFoundError:
             print("Decompress target does not exist")
-
+        except FileExistsError:
+            print("Decompress file already exist")
 
 
 
 
 if __name__ == "__main__":
-    l = loader()
+    """
+    dl = loader()
     path = ""
     res = []
     for fname in os.listdir('./'):
         if fnmatch(fname, "*.zip"):
-            decompress = zipDecompressor(l)
+            dl = zipDecompressor(dl)
             path = fname
+    #dl = restartDecompressor(dl)
     print(path)
-    decompress_list = decompress.decompress(path)
+    decompress_list = dl.decompress(path)
     for decompress_file in decompress_list:
         if decompress_file.endswith(".json"):
-            dataloader = jsonLoader(l)
-            target = dataloader.load(decompress_file)
+            dl = jsonLoader(dl)
+            target = dl.load(decompress_file)
             res += target
-
-    dl = dataLoader("./")
-    dl.load()
-    print(dl.data[:1])
-
+    """
+    dl = dataLoader("./temp")
+    

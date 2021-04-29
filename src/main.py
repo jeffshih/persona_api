@@ -1,4 +1,4 @@
-from config import *
+from src.config import *
 from flask import Flask
 from flask import jsonify
 from flask import request

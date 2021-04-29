@@ -8,7 +8,6 @@ I'll keep this module atomic, as close to the orm as possible.
 Just like the domain layer.
 """
 
-
 class database(object):
     """
     Create a mock db, basic idea of implementation is using a hashmap , 

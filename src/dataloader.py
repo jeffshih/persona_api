@@ -120,6 +120,8 @@ class dataLoader(object):
         self.__source = source
         self.__target = target
         self.__load()
+        if not self.data:
+            raise FileNotFoundError
 
     def __load(self):
         file_list = []
@@ -139,6 +141,8 @@ class dataLoader(object):
         try:
             for filename in file_list:
                 decompress_list = self.loader.decompress(filename)
+                if not decompress_list:
+                    raise BadZipFile
                 for decompress_file in decompress_list:
                     if decompress_file.endswith("json"):
                         self.loader = jsonLoader(self.loader)
@@ -150,8 +154,6 @@ class dataLoader(object):
                         print("loader decorate error")
         except FileNotFoundError:
             print("Decompress target does not exist")
-        except FileExistsError:
-            print("Decompress file already exist")
 
 
 

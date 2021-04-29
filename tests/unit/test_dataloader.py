@@ -46,6 +46,17 @@ def test_zipDecompressor():
 
 def test_dataLoader_error():
     with pytest.raises(PermissionError):
-        l1 = dataLoader(source="./abc") 
+        l = dataLoader(source="./abc") 
     with pytest.raises(FileNotFoundError):
-        l1 = dataLoader(source="./temp")
+        l = dataLoader(source="./static")
+    with pytest.raises(BadZipFile):
+        l = dataLoader(source="./temp",target="./static")
+
+def test_jsonLoader(dl_t):
+    l = loader()
+    l = jsonLoader(l)
+    res = l.load("./temp/mock.json")
+    assert(res == {})
+    res = l.load("./storage/fake_profiles.json")
+    expected = dl_t.data
+    assert(res==expected)

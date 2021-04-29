@@ -40,7 +40,30 @@ def test_search_fail(db_t):
     res = db_t.search("abc")
     assert(res is None)
 
-
+def test_db_delete(db_t):
+    """
+    test delete of db
+    """
+    expected = [{'job': 'Development worker, international aid', 'company': 'King-Howarth', 'ssn': 'ZZ299609T', \
+                'residence': 'Studio 62i\nFrost alley\nSouth Jean\nN3W 2QA', 'current_location': [44.5767695, 129.747714], \
+                'blood_group': '0+', 'website': ['https://webb.com/', 'https://jones-williams.com/', 'http://www.williams.biz/'],\
+                'username': 'mauriceharris', 'name': 'Donald Holden', 'sex': 'F', 'address': 'Studio 5\nTucker squares\nHutchinsonburgh\nS86 2GH',\
+                'mail': 'fishercheryl@gmail.com', 'birthdate': '1998-03-04'}, 
+                {'job': 'Exhibition designer', 'company': 'Berry, Grant and Anderson','ssn': 'ZZ489841T', \
+                'residence': 'Flat 59\nBarlow harbors\nWilliamsside\nM1 3YU', 'current_location': [-88.463234, -74.274428], \
+                'blood_group': 'A+', 'website': ['https://griffiths.com/', 'http://www.cunningham.net/'], \
+                'username': 'mauriceharris', 'name': 'Harriet Armstrong', 'sex': 'F', 'address': '09 Charlie motorway\nNorth Paigeville\nM1T 0PD', \
+                'mail': 'marc07@gmail.com', 'birthdate': '1988-02-13'}]
+    
+    searchRes = db_t.search("mauriceharris")
+    assert(searchRes == expected)
+    res = db_t.delete("mauriceharris")
+    assert(res)
+    searchRes = db_t.search("mauriceharris")
+    assert(searchRes == None)
+    res = db_t.delete("mauriceharris")
+    assert(not res)
+     
 
 
 #print(d.get("mauriceharris"))

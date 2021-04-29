@@ -31,14 +31,13 @@ class database(object):
     """
 
 
-    def __init__(self, path="./"):
+    def __init__(self, source = compress_file_path, target = decompressed_file_path):
         """
         Load in the data with dataLoader, create a hashtable and use username as key
         and the value is a list of json object(dict).
         Keep the raw data list for pagination
         """
-        dl = dataLoader(path)
-        dl.load()
+        dl = dataLoader(source, target)
         self.__data = {}
         self.__raw = dl.data
         self.__process(dl.data)

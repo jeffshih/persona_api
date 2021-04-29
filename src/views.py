@@ -13,18 +13,10 @@ class Search(Resource):
         If we are using a formal rdbms or we have orm, we can perform general query
         here only query for users
         """
-        res = {}
-        try:
-            searchResult = db.search(username)
-            if not searchResult :
-                raise ValueError
-            res["status"] = "Success"
-            res["data"] = searchResult
-        except ValueError as e:
-            res["status"] = "Fail"
-            res["data"] = "username {} does not exist".format(username)
-        finally:
-            return jsonify(res)
+        searchResult = db.search(username)
+        if not searchResult :
+            raise InvalidUsage.user_not_found()
+        return template(searchResult, "Success", 200)
         
 class SearchRange(Resource):
     """
@@ -39,7 +31,7 @@ class SearchRange(Resource):
             start = pageSize*(page+1)
             end = start+pageSize
             if start >= end or page < 0 or pageSize <= 0:
-                raise ValueError
+                raise InvalidUsage.invalid_search_range()
             searchResult = db.searchRange(start,end)
             res["status"] = "Success"
             res["data"] = searchResult
@@ -66,4 +58,3 @@ class Delete(Resource):
             res["data"] = "username {} does not exist".format(username)
         finally:
             return jsonify(res) 
-

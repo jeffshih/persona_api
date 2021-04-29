@@ -73,3 +73,4 @@ class database(object):
         in the controller layer.
         """
         return self.__raw[start:end]
+

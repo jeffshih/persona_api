@@ -7,11 +7,14 @@ from src.config import *
 from flask import Flask
 from flask_restful import Api
 from src.views import *
+from flasgger import Swagger
 
 
 def create_app():
     app = Flask(__name__)
     api = Api(app)
+    app.config['SWAGGER'] = {'title':'Persona api', 'uiversion':2}
+    swag = Swagger(app)
 
     """
     Handle all the unimplemented api.

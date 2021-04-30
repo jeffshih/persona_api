@@ -1,0 +1,4 @@
+Flask == 1.1.2
+Flasgger == 0.9.5
+Flask-RESTful == 0.3.8
+pytest == 6.2.3

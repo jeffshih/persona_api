@@ -70,14 +70,14 @@ def test_pagination_after_delete(app_t, db_t):
     """
 
     target = "twong"
-    response = app_t.get("/people")
+    response = app_t.get("/people?page=0&pageSize=10")
     expected = db_t.searchRange(0,10)
     assert response.status_code == 200
     assert json.loads(response.data)["data"] == expected 
     response2 = app_t.delete("/people/{}".format(target))
     assert response2.status_code == 200
     assert json.loads(response2.data)["data"] == "Delete {}".format(target) 
-    response3 = app_t.get("/people")
+    response3 = app_t.get("/people?page=0&pageSize=10")
     expected = db_t.searchRange(0,10)
     assert response3.status_code == 200
     assert json.loads(response3.data)["data"] == expected 

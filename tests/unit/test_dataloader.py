@@ -1,5 +1,9 @@
-import sys 
+import sys
+import os.path as osp
+import os
 sys.path.append("./")
+APP_DIR = osp.abspath(osp.dirname(__file__))
+PROJECT_ROOT = osp.abspath(osp.join(APP_DIR, os.pardir))
 from src.dataloader import *
 from src.config import *
 import random
@@ -41,7 +45,7 @@ def test_zipDecompressor():
     decompressor.TARGET = decompressed_file_path
     decompressor.SOURCE = compress_file_path
     res = decompressor.decompress("./fake_profiles.zip")
-    expected = ['/Users/jeffshih/Documents/Project/assignment/persona-api/storage/fake_profiles.json']
+    expected = [os.path.join(PROJECT_ROOT,'storage/fake_profiles.json')]
     assert(res == expected)
 
 def test_dataLoader_error():
@@ -57,6 +61,10 @@ def test_jsonLoader(dl_t):
     l = jsonLoader(l)
     res = l.load("./temp/mock.json")
     assert(res == {})
-    res = l.load("./storage/fake_profiles.json")
+    decompressor = zipDecompressor(l)
+    decompressor.TARGET = decompressed_file_path
+    path = decompressor.decompress("./fake_profiles.zip") 
+    res = l.load(osp.join(PROJECT_ROOT,"storage/fake_profiles.json"))
+    os.remove(path[0])
     expected = dl_t.data
     assert(res==expected)

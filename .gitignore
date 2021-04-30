@@ -4,6 +4,9 @@ __pycache__/
 *$py.class
 *.json
 
+# vscode
+.vscode/
+
 
 # C extensions
 *.so
@@ -47,6 +50,7 @@ nosetests.xml
 coverage.xml
 *.cover
 .hypothesis/
+.pytest_cache/
 
 # Translations
 *.mo

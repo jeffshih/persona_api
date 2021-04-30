@@ -18,9 +18,7 @@ import datetime as dt
 class loader():
     """
     Base component for the flat file loader
-    
     """
-
 
     def decompress(self,filename):
         pass 
@@ -41,7 +39,6 @@ class loadDecorator(loader):
     @property
     def loader(self):
         return self.__loader
-
 
     def load(self,filename):
         return self.__loader.load(filename)
@@ -79,10 +76,12 @@ class tarDecompressor(loadDecorator):
     pass
 
 class restartDecompressor(loadDecorator):
+    """
+    Dummy decompressor, return a list of decompressed file for next step of loading
+    """
     def decompress(self, filename):
         res = [osp.join(self.TARGET, item) for item in os.listdir(self.TARGET)]
         if res:
-            #print("using restart decompressor")
             return res
         else:
             return super().decompress(filename)
@@ -90,7 +89,7 @@ class restartDecompressor(loadDecorator):
 class jsonLoader(loadDecorator):
     
     """
-    Read in default zip file, unzip and load the json file into memory
+    Read in default zip file, unzip and load the json file into memory, remove the json object.
     """
     def load(self, fname):
         #print("using jsonLoader")
@@ -136,8 +135,6 @@ class dataLoader(object):
                     file_list.append(filename)
         if len(file_list) == 0:
             raise FileNotFoundError
-        if len(os.listdir(self.__target)) != 0:
-            self.loader = restartDecompressor(self.loader)
         try:
             for filename in file_list:
                 decompress_list = self.loader.decompress(filename)
@@ -152,6 +149,7 @@ class dataLoader(object):
                         self.data += self.loader.load(decompress_file)
                     except ValueError:
                         print("loader decorate error")
+                    os.remove(decompress_file)
         except FileNotFoundError:
             print("Decompress target does not exist")
 
@@ -159,22 +157,5 @@ class dataLoader(object):
 
 
 if __name__ == "__main__":
-    """
-    dl = loader()
-    path = ""
-    res = []
-    for fname in os.listdir('./'):
-        if fnmatch(fname, "*.zip"):
-            dl = zipDecompressor(dl)
-            path = fname
-    #dl = restartDecompressor(dl)
-    print(path)
-    decompress_list = dl.decompress(path)
-    for decompress_file in decompress_list:
-        if decompress_file.endswith(".json"):
-            dl = jsonLoader(dl)
-            target = dl.load(decompress_file)
-            res += target
-    """
     dl = dataLoader("./temp")
     

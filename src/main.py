@@ -4,35 +4,29 @@ APP_DIR = os.path.abspath(os.path.dirname(__file__))
 PROJECT_ROOT = os.path.abspath(os.path.join(APP_DIR, os.pardir))
 sys.path.append(PROJECT_ROOT)
 from src.config import *
-from flask import Flask, jsonify, request
+from flask import Flask
 from flask_restful import Api
 from src.views import *
 
 
-app = Flask(__name__)
+def create_app():
+    app = Flask(__name__)
+    api = Api(app)
 
-def errorhandler(error):
-    response = error.to_json()
-    return response
+    """
+    Handle all the unimplemented api.
+    """
+    @app.errorhandler(404)
+    def page_not_found(error):
+        return jsonify(InvalidUsage.unknown_endpoint().data), 404
 
-#app.errorhandler(InvalidUsage)(errorhandler)
-
-
-api = Api(app)
-
-@app.route('/')
-def index():
-    return 'Hello'
-
-
-@app.errorhandler(404)
-def not_found_error(error):
-    raise InvalidUsage.unknown_endpoint()
-
-api.add_resource(Search,'/search/<string:username>')
-api.add_resource(SearchRange,'/people')
-api.add_resource(Delete, '/people/<string:username>')
+    api = Api(app)
+    api.add_resource(Search,'/search/<string:username>')
+    api.add_resource(SearchRange,'/people')
+    api.add_resource(Delete, '/people/<string:username>')
+    return app
 
 
 if __name__ == '__main__':
+    app = create_app()
     app.run()

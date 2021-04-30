@@ -9,7 +9,8 @@ def template(data, status, code=500):
 USER_NOT_FOUND = template(["username not found"], "Fail", 404)
 UNKNOWN_ERROR = template([],"Fail",500)
 INVALIDE_SEARCH_RANGE = template(["Invalid search range"], "Fail", 404)
-UNKNOWN_ENDPOINT = template(["Page does not exist"], "Fail", 404)
+UNKNOWN_ENDPOINT = template(["Endpoint does not exist"], "Fail", 404)
+INVALID_REQUEST = template(["Invalid request method"], "Fail", 405)
 
 class InvalidUsage(Exception):
     status_code = 500

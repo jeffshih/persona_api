@@ -29,4 +29,6 @@
  $ pytest
  ```
 
- 
+### Endpoint testing using swagger
+
+By entering http://127.0.0.1:5000/apidoc you can see the swagger UI for basic testing
